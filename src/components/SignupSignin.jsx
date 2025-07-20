@@ -115,7 +115,6 @@ const SignupSignin = () => {
           const credential = GoogleAuthProvider.credentialFromResult(result);
           const token = credential.accessToken;
           const user = result.user;
-          console.log("users", user);
           createDoc(user, false);
           toast.success("User Authenticated!");
           setLoading(false);
@@ -136,10 +135,10 @@ const SignupSignin = () => {
   return (
     <div className="w-full flex justify-center px-4">
       <div className="w-full max-w-md bg-white/20 backdrop-blur-md border border-white/30 shadow-2xl rounded-3xl p-6 sm:p-8 md:p-10 space-y-6">
-        <h2 className="text-3xl font-bold text-center text-white">
+        <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-gray-200">
           {loginForm ? "Welcome Back 👋" : "Join Expense Tracker 🎯"}
         </h2>
-        <p className="text-center text-white/90 text-sm mb-4">
+        <p className="text-center text-sm text-gray-800 dark:text-gray-200">
           {loginForm
             ? "Sign in to manage your finances easily!"
             : "Create your account and start budgeting today."}
@@ -188,7 +187,9 @@ const SignupSignin = () => {
             disabled={loading}
             loading={loading}
           />
-          <div className="text-sm text-white/80 font-medium">or</div>
+          <div className="text-center text-sm text-gray-800 dark:text-gray-200">
+            or
+          </div>
           <Button
             text={loginForm ? "Sign in using Google" : "Sign up using Google"}
             onClick={googleAuth}
@@ -200,23 +201,27 @@ const SignupSignin = () => {
         <div className="text-center text-sm text-white mt-4">
           {loginForm ? (
             <>
-              Don’t have an account?{" "}
-              <button
-                onClick={() => setLoginForm(false)}
-                className="text-blue-200 font-medium hover:underline"
-              >
-                Sign Up
-              </button>
+              <p className="text-center text-sm text-gray-800 dark:text-gray-200">
+                Don’t have an account?{" "}
+                <button
+                  onClick={() => setLoginForm(false)}
+                  className="text-blue-600 dark:text-blue-200 font-medium hover:underline"
+                >
+                  Sign Up
+                </button>
+              </p>
             </>
           ) : (
             <>
-              Already have an account?{" "}
-              <button
-                onClick={() => setLoginForm(true)}
-                className="text-blue-200 font-medium hover:underline"
-              >
-                Sign In
-              </button>
+              <p className="text-center text-sm text-gray-800 dark:text-gray-200">
+                Already have an account?{" "}
+                <button
+                  onClick={() => setLoginForm(true)}
+                  className="text-blue-600 dark:text-blue-300 font-semibold hover:underline"
+                >
+                  Sign In
+                </button>
+              </p>
             </>
           )}
         </div>

@@ -6,7 +6,7 @@ A full-stack personal finance web application built with React 19 and Firebase. 
 
 ## Live Demo
 
-> _Add your deployed URL here (Vercel / Firebase Hosting / Netlify)_
+> https://smart-expense-app.vercel.app/
 
 ---
 

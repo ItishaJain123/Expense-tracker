@@ -4,7 +4,12 @@ import { auth } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useSplitBills } from "../hooks/useSplitBills";
 
-const BillSplitModal = ({ onClose, onAddTransactions }) => {
+const ACCOUNT_ICONS = {
+  Bank: "🏦", Wallet: "👛", Cash: "💵", "Credit Card": "💳",
+  Savings: "🏧", Investment: "📈", Other: "💼",
+};
+
+const BillSplitModal = ({ onClose, onAddTransactions, accounts = [] }) => {
   const [user] = useAuthState(auth);
   const { saveSplit } = useSplitBills();
 
@@ -16,13 +21,20 @@ const BillSplitModal = ({ onClose, onAddTransactions }) => {
   const [tip, setTip] = useState(0);
   const [myName, setMyName] = useState(defaultMyName);
   const [others, setOthers] = useState([{ name: "" }]);
+  const [accountId, setAccountId] = useState("");
 
   const subtotal = Number(bill) || 0;
   const total = subtotal * (1 + tip / 100);
   const allPeople = [{ name: myName || "Me", isMe: true }, ...others];
   const perPerson = allPeople.length > 0 ? total / allPeople.length : 0;
 
-  const addOther = () => setOthers([...others, { name: "" }]);
+  const addOther = () => {
+    if (others.some((p) => !p.name.trim())) {
+      toast.error("Fill in the existing person's name first");
+      return;
+    }
+    setOthers([...others, { name: "" }]);
+  };
   const removeOther = (i) => others.length > 1 && setOthers(others.filter((_, idx) => idx !== i));
   const updateOther = (i, name) => setOthers(others.map((p, idx) => (idx === i ? { name } : p)));
 
@@ -33,7 +45,6 @@ const BillSplitModal = ({ onClose, onAddTransactions }) => {
     const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
     const peopleList = allPeople.map((p) => ({ name: p.name || "Person", isMe: !!p.isMe }));
 
-    // Save full bill to Firestore
     await saveSplit({
       billName: billName.trim() || "Shared Bill",
       totalAmount: total,
@@ -44,13 +55,13 @@ const BillSplitModal = ({ onClose, onAddTransactions }) => {
       date: today,
     });
 
-    // Add ONLY my share as a transaction
     await onAddTransactions([{
       name: `Split: ${billName.trim() || "Shared Bill"}`,
       amount: perPerson,
       type: "expense",
       category: "Other",
       date: today,
+      ...(accountId ? { accountId } : {}),
     }]);
 
     toast.success("Bill split saved & your share added!");
@@ -146,6 +157,27 @@ const BillSplitModal = ({ onClose, onAddTransactions }) => {
               ))}
             </div>
           </div>
+
+          {/* Account selector */}
+          {accounts.length > 0 && (
+            <div>
+              <label className="text-xs text-gray-500 uppercase tracking-wide mb-1.5 block">
+                Deduct from Account <span className="normal-case text-gray-400">(optional)</span>
+              </label>
+              <select
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:border-blue-500 bg-gray-50 text-sm"
+              >
+                <option value="">No account</option>
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {ACCOUNT_ICONS[a.type] || "💼"} {a.name} — ₹{Number(a.balance).toLocaleString("en-IN")}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Result */}
           {subtotal > 0 && (

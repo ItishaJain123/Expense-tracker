@@ -7,10 +7,11 @@ const Cards = ({
   showExpenseModal,
   showIncomeModal,
   showResetModal,
+  balanceLabel = "Current Balance",
 }) => {
   const cards = [
     {
-      title: "Current Balance",
+      title: balanceLabel,
       icon: "💼",
       value: currentBalance,
       gradient: "from-blue-600/20 to-sky-400/20",

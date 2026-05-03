@@ -1,4 +1,4 @@
-﻿import { Modal, Form, Input, DatePicker, Select, Button } from "antd";
+import { Modal, Form, Input, DatePicker, Select, Button } from "antd";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "../../constants";
@@ -13,7 +13,7 @@ const MODAL_STYLES = {
   mask: { backdropFilter: "blur(4px)" },
 };
 
-const EditModal = ({ editModalVisible, transaction, handleEditCancel, handleUpdate }) => {
+const EditModal = ({ editModalVisible, transaction, handleEditCancel, handleUpdate, accounts = [] }) => {
   const [form] = Form.useForm();
   const [transactionType, setTransactionType] = useState("expense");
 
@@ -26,6 +26,7 @@ const EditModal = ({ editModalVisible, transaction, handleEditCancel, handleUpda
         date: transaction.date ? dayjs(transaction.date, "D MMMM YYYY") : null,
         type: transaction.type || "income",
         category: transaction.category || undefined,
+        accountId: transaction.accountId || (accounts.length > 0 ? accounts[0].id : undefined),
       });
     }
   }, [transaction, editModalVisible]);
@@ -49,7 +50,7 @@ const EditModal = ({ editModalVisible, transaction, handleEditCancel, handleUpda
     >
       <Form form={form} layout="vertical" onFinish={handleUpdate} className="mt-4">
         <Form.Item
-          label={<span className="text-gray-300 text-sm">Name</span>}
+          label={<span className="text-gray-600 text-sm">Name</span>}
           name="name"
           rules={[{ required: true, message: "Please enter a name" }]}
         >
@@ -57,7 +58,7 @@ const EditModal = ({ editModalVisible, transaction, handleEditCancel, handleUpda
         </Form.Item>
 
         <Form.Item
-          label={<span className="text-gray-300 text-sm">Type</span>}
+          label={<span className="text-gray-600 text-sm">Type</span>}
           name="type"
           rules={[{ required: true }]}
         >
@@ -73,7 +74,7 @@ const EditModal = ({ editModalVisible, transaction, handleEditCancel, handleUpda
         </Form.Item>
 
         <Form.Item
-          label={<span className="text-gray-300 text-sm">Category</span>}
+          label={<span className="text-gray-600 text-sm">Category</span>}
           name="category"
           rules={[{ required: true, message: "Please select a category" }]}
         >
@@ -87,7 +88,7 @@ const EditModal = ({ editModalVisible, transaction, handleEditCancel, handleUpda
         </Form.Item>
 
         <Form.Item
-          label={<span className="text-gray-300 text-sm">Amount (₹)</span>}
+          label={<span className="text-gray-600 text-sm">Amount (₹)</span>}
           name="amount"
           rules={[{ required: true, message: "Please enter an amount" }]}
         >
@@ -98,12 +99,28 @@ const EditModal = ({ editModalVisible, transaction, handleEditCancel, handleUpda
         </Form.Item>
 
         <Form.Item
-          label={<span className="text-gray-300 text-sm">Date</span>}
+          label={<span className="text-gray-600 text-sm">Date</span>}
           name="date"
           rules={[{ required: true, message: "Please select a date" }]}
         >
           <DatePicker format="D MMMM YYYY" className="w-full rounded-lg" />
         </Form.Item>
+
+        {accounts.length > 0 && (
+          <Form.Item
+            label={<span className="text-gray-600 text-sm">Account</span>}
+            name="accountId"
+            rules={[{ required: true, message: "Please select an account" }]}
+          >
+            <Select placeholder="Select account" className="w-full">
+              {accounts.map((a) => (
+                <Select.Option key={a.id} value={a.id}>
+                  {a.name} — ₹{Number(a.balance).toLocaleString("en-IN")}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
 
         <Form.Item className="mb-0 mt-6">
           <Button

@@ -2,11 +2,13 @@ import { useState } from "react";
 import moment from "moment";
 import { useSplitBills } from "../hooks/useSplitBills";
 import { useTransactions } from "../hooks/useTransactions";
+import { useAccounts } from "../hooks/useAccounts";
 import BillSplitModal from "../components/BillSplitModal";
 
 const SplitBills = () => {
   const { splits, loading, deleteSplit } = useSplitBills();
   const { addTransaction, fetchTransactions } = useTransactions();
+  const { accounts, fetchAccounts } = useAccounts();
   const [modalOpen, setModalOpen] = useState(false);
 
   const totalSplits = splits.length;
@@ -129,9 +131,11 @@ const SplitBills = () => {
       {modalOpen && (
         <BillSplitModal
           onClose={() => setModalOpen(false)}
+          accounts={accounts}
           onAddTransactions={async (txns) => {
             for (const t of txns) await addTransaction(t, true);
             await fetchTransactions();
+            await fetchAccounts();
           }}
         />
       )}

@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { MdEdit, MdDelete } from "react-icons/md";
 import { useTransactions } from "../hooks/useTransactions";
 import { useBudgets } from "../hooks/useBudgets";
+import { useAccounts } from "../hooks/useAccounts";
 import Cards from "../components/Cards";
 import AddExpense from "../components/Modals/AddExpense";
 import AddIncome from "../components/Modals/AddIncome";
@@ -122,7 +123,28 @@ const Dashboard = () => {
   } = useTransactions();
 
   const { budgets, loading: budgetLoading } = useBudgets();
+  const { accounts, fetchAccounts, totalBalance } = useAccounts();
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
   const alertedRef = useRef(false);
+
+  const ACCOUNT_ICONS = { Bank: "🏦", Wallet: "👛", Cash: "💵", "Credit Card": "💳", Savings: "🏧", Investment: "📈", Other: "💼" };
+
+  const accountTransactions = selectedAccountId
+    ? transactions.filter((t) => t.accountId === selectedAccountId)
+    : transactions;
+
+  const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
+
+  const displayBalance = selectedAccountId
+    ? Number(selectedAccount?.balance ?? 0)
+    : accounts.length > 0 ? totalBalance : balance;
+  const displayIncome = accountTransactions
+    .filter((t) => t.type === "income")
+    .reduce((s, t) => s + Number(t.amount), 0);
+  const displayExpense = accountTransactions
+    .filter((t) => t.type === "expense")
+    .reduce((s, t) => s + Number(t.amount), 0);
+  const balanceLabel = selectedAccount ? `${selectedAccount.name} Balance` : "Current Balance";
 
   // Fire budget alerts once after both data sources load
   useEffect(() => {
@@ -168,9 +190,9 @@ const Dashboard = () => {
   const [resetModalVisible, setResetModalVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-  // This month stats
+  // This month stats — scoped to selected account
   const thisMonthKey = moment().format("MMM YY");
-  const thisMonthTx = transactions.filter((t) => {
+  const thisMonthTx = accountTransactions.filter((t) => {
     const m = moment(t.date, ["D MMMM YYYY", "YYYY-MM-DD"]);
     return m.isValid() && m.format("MMM YY") === thisMonthKey;
   });
@@ -185,7 +207,10 @@ const Dashboard = () => {
       ? Math.round(((thisMonthIncome - thisMonthExpense) / thisMonthIncome) * 100)
       : 0;
 
-  const recentTransactions = sortedTransactions.slice(0, 5);
+  const filteredSorted = selectedAccountId
+    ? sortedTransactions.filter((t) => t.accountId === selectedAccountId)
+    : sortedTransactions;
+  const recentTransactions = filteredSorted.slice(0, 5);
 
   const checkBudgetAfterExpense = (category, newAmount) => {
     const limit = budgets[category];
@@ -224,11 +249,13 @@ const Dashboard = () => {
       date: values.date ? values.date.format("D MMMM YYYY") : null,
       type,
       category: values.category || "Other",
+      ...(values.accountId ? { accountId: values.accountId } : {}),
     };
     setIsExpenseModalVisible(false);
     setIsIncomeModalVisible(false);
     await addTransaction(newTransaction);
     await fetchTransactions();
+    if (values.accountId) await fetchAccounts();
     if (type === "expense") {
       checkBudgetAfterExpense(newTransaction.category, newTransaction.amount);
     }
@@ -237,8 +264,9 @@ const Dashboard = () => {
   const confirmDelete = async () => {
     if (!selectedTransaction?.id) return;
     try {
-      await deleteTransaction(selectedTransaction.id);
+      await deleteTransaction(selectedTransaction.id, selectedTransaction);
       await fetchTransactions();
+      if (selectedTransaction?.accountId) await fetchAccounts();
     } catch {
       toast.error("Failed to delete");
     } finally {
@@ -248,11 +276,10 @@ const Dashboard = () => {
 
   const handleUpdate = async (values) => {
     try {
-      await updateTransaction(selectedTransaction.id, {
-        ...values,
-        date: values.date.format("D MMMM YYYY"),
-      });
+      const updated = { ...values, date: values.date.format("D MMMM YYYY") };
+      await updateTransaction(selectedTransaction.id, updated, selectedTransaction);
       await fetchTransactions();
+      if (selectedTransaction?.accountId || updated.accountId) await fetchAccounts();
       setEditModalVisible(false);
       setSelectedTransaction(null);
     } catch {
@@ -294,14 +321,48 @@ const Dashboard = () => {
         </p>
       </div>
 
+      {/* Account selector */}
+      {accounts.length > 0 && (
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 flex-nowrap">
+          <button
+            onClick={() => setSelectedAccountId(null)}
+            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border transition-all cursor-pointer ${
+              !selectedAccountId
+                ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                : "bg-white text-gray-600 border-gray-200 hover:border-blue-400"
+            }`}
+          >
+            All Accounts
+          </button>
+          {accounts.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => setSelectedAccountId(a.id)}
+              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all cursor-pointer ${
+                selectedAccountId === a.id
+                  ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-400"
+              }`}
+            >
+              <span>{ACCOUNT_ICONS[a.type] || "💼"}</span>
+              <span>{a.name}</span>
+              <span className={`text-xs font-normal ${selectedAccountId === a.id ? "text-blue-100" : "text-gray-400"}`}>
+                ₹{Number(a.balance).toLocaleString("en-IN")}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Balance Cards */}
       <Cards
-        currentBalance={balance}
-        income={income}
-        expense={expense}
+        currentBalance={displayBalance}
+        income={displayIncome}
+        expense={displayExpense}
         showExpenseModal={() => setIsExpenseModalVisible(true)}
         showIncomeModal={() => setIsIncomeModalVisible(true)}
         showResetModal={() => setResetModalVisible(true)}
+        balanceLabel={balanceLabel}
       />
 
       {/* This month quick stats */}
@@ -403,7 +464,7 @@ const Dashboard = () => {
                     <MdDelete
                       className="text-red-600 cursor-pointer hover:text-red-700 transition-colors"
                       onClick={() => {
-                        setSelectedTransaction({ id: t.id, name: t.name });
+                        setSelectedTransaction(t);
                         setDeleteModalVisible(true);
                       }}
                     />
@@ -420,17 +481,20 @@ const Dashboard = () => {
         isIncomeModalVisible={isIncomeModalVisible}
         handleIncomeCancel={() => setIsIncomeModalVisible(false)}
         onFinish={onFinish}
+        accounts={accounts}
       />
       <AddExpense
         isExpenseModalVisible={isExpenseModalVisible}
         handleExpenseCancel={() => setIsExpenseModalVisible(false)}
         onFinish={onFinish}
+        accounts={accounts}
       />
       <EditModal
         editModalVisible={editModalVisible}
         handleEditCancel={() => setEditModalVisible(false)}
         transaction={selectedTransaction}
         handleUpdate={handleUpdate}
+        accounts={accounts}
       />
       <DeleteConfirmationModal
         deleteModalVisible={deleteModalVisible}

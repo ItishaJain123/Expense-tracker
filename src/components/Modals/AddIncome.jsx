@@ -9,13 +9,16 @@ const MODAL_STYLES = {
   mask: { backdropFilter: "blur(4px)" },
 };
 
-const AddIncome = ({ isIncomeModalVisible, handleIncomeCancel, onFinish }) => {
+const AddIncome = ({ isIncomeModalVisible, handleIncomeCancel, onFinish, accounts = [] }) => {
   const [form] = Form.useForm();
   const [listening, setListening] = useState(false);
 
   useEffect(() => {
+    if (isIncomeModalVisible && accounts.length > 0) {
+      form.setFieldsValue({ accountId: accounts[0].id });
+    }
     if (!isIncomeModalVisible) form.resetFields();
-  }, [isIncomeModalVisible, form]);
+  }, [isIncomeModalVisible, accounts, form]);
 
   const startListening = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -85,6 +88,17 @@ const AddIncome = ({ isIncomeModalVisible, handleIncomeCancel, onFinish }) => {
         <Form.Item label={<span className="text-gray-600 text-sm">Date</span>} name="date" rules={[{ required: true, message: "Please select a date" }]}>
           <DatePicker format="D MMMM YYYY" className="w-full rounded-lg border-gray-200" />
         </Form.Item>
+        {accounts.length > 0 && (
+          <Form.Item label={<span className="text-gray-600 text-sm">Account</span>} name="accountId" rules={[{ required: true, message: "Please select an account" }]}>
+            <Select placeholder="Select account" className="w-full">
+              {accounts.map((a) => (
+                <Select.Option key={a.id} value={a.id}>
+                  {a.name} — ₹{Number(a.balance).toLocaleString("en-IN")}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        )}
         <Form.Item className="mb-0 text-right mt-6">
           <Button htmlType="submit" className="bg-emerald-500 hover:bg-emerald-600 border-none text-white font-semibold px-6 rounded-xl">
             Add Income

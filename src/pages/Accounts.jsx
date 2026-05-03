@@ -1,5 +1,7 @@
 ﻿import { useState } from "react";
 import { useAccounts } from "../hooks/useAccounts";
+import { useTransactions } from "../hooks/useTransactions";
+import moment from "moment";
 
 const ACCOUNT_TYPES = ["Bank", "Wallet", "Cash", "Credit Card", "Savings", "Investment", "Other"];
 const ACCOUNT_ICONS = {
@@ -71,7 +73,7 @@ const AccountModal = ({ account, onSave, onClose }) => {
 
         <div className="mb-6">
           <label className="text-gray-600 text-xs uppercase tracking-wide mb-2 block">
-            Current Balance (₹)
+            Opening Balance (₹) <span className="normal-case text-gray-400">— auto-updated by transactions</span>
           </label>
           <input
             type="number"
@@ -187,14 +189,17 @@ const TransferModal = ({ accounts, onTransfer, onClose }) => {
   );
 };
 
-const AccountCard = ({ account, onEdit, onDelete }) => {
+const AccountCard = ({ account, onEdit, onDelete, onView }) => {
   const icon = ACCOUNT_ICONS[account.type] || "💼";
   const gradient = ACCOUNT_COLORS[account.type] || "from-gray-500 to-gray-600";
   const balance = Number(account.balance);
   const isNegative = balance < 0;
 
   return (
-    <div className="bg-[#FFFFFF] border border-gray-200 hover:border-gray-200 rounded-2xl p-5 transition-all flex flex-col gap-4">
+    <div
+      className="bg-[#FFFFFF] border border-gray-200 hover:border-blue-300 hover:shadow-md rounded-2xl p-5 transition-all flex flex-col gap-4 cursor-pointer"
+      onClick={() => onView(account)}
+    >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-2xl shadow-lg flex-shrink-0`}>
@@ -205,7 +210,7 @@ const AccountCard = ({ account, onEdit, onDelete }) => {
             <span className="text-xs text-gray-500 bg-[#F1F5F9] px-2 py-0.5 rounded-full">{account.type}</span>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => onEdit(account)}
             className="text-gray-500 hover:text-blue-600 transition-colors p-1.5 rounded-lg hover:bg-blue-600/10 cursor-pointer text-sm"
@@ -224,10 +229,98 @@ const AccountCard = ({ account, onEdit, onDelete }) => {
       </div>
 
       <div>
-        <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Balance</p>
+        <p className="text-gray-500 text-xs uppercase tracking-wide mb-1">Current Balance</p>
         <p className={`text-2xl font-bold ${isNegative ? "text-red-600" : "text-gray-900"}`}>
           {isNegative ? "-" : ""}₹{Math.abs(balance).toLocaleString("en-IN")}
         </p>
+      </div>
+
+      <p className="text-xs text-blue-600 font-medium">Tap to view transactions →</p>
+    </div>
+  );
+};
+
+const AccountTransactionsPanel = ({ account, transactions, onClose }) => {
+  const icon = ACCOUNT_ICONS[account.type] || "💼";
+  const gradient = ACCOUNT_COLORS[account.type] || "from-gray-500 to-gray-600";
+  const linked = transactions
+    .filter((t) => t.accountId === account.id)
+    .sort((a, b) =>
+      moment(b.date, ["D MMMM YYYY", "YYYY-MM-DD"]).valueOf() -
+      moment(a.date, ["D MMMM YYYY", "YYYY-MM-DD"]).valueOf()
+    );
+
+  const totalIn = linked.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount), 0);
+  const totalOut = linked.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount), 0);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-200 max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-xl shadow`}>
+              {icon}
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">{account.name}</h2>
+              <p className="text-xs text-gray-500">{linked.length} transaction{linked.length !== 1 ? "s" : ""} linked</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl cursor-pointer">✕</button>
+        </div>
+
+        {/* Balance strip */}
+        <div className="grid grid-cols-3 gap-3 p-4 border-b border-gray-100">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Balance</p>
+            <p className={`text-lg font-bold ${Number(account.balance) < 0 ? "text-red-600" : "text-gray-900"}`}>
+              ₹{Number(account.balance).toLocaleString("en-IN")}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Money In</p>
+            <p className="text-lg font-bold text-emerald-600">+₹{totalIn.toLocaleString("en-IN")}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Money Out</p>
+            <p className="text-lg font-bold text-red-600">-₹{totalOut.toLocaleString("en-IN")}</p>
+          </div>
+        </div>
+
+        {/* Transaction list */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {linked.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+              <span className="text-5xl">📭</span>
+              <p className="text-gray-600 text-sm">No transactions linked to this account yet.</p>
+              <p className="text-gray-400 text-xs">Select this account when adding income or expenses.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {linked.map((t) => (
+                <div key={t.id} className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${
+                      t.type === "income" ? "bg-emerald-100" : "bg-red-100"
+                    }`}>
+                      {t.type === "income" ? "💰" : "💸"}
+                    </div>
+                    <div>
+                      <p className="text-gray-900 text-sm font-medium">{t.name}</p>
+                      <p className="text-gray-400 text-xs">{t.date} · {t.category}</p>
+                    </div>
+                  </div>
+                  <p className={`text-sm font-bold flex-shrink-0 ${
+                    t.type === "income" ? "text-emerald-600" : "text-red-600"
+                  }`}>
+                    {t.type === "income" ? "+" : "-"}₹{Number(t.amount).toLocaleString("en-IN")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -235,9 +328,11 @@ const AccountCard = ({ account, onEdit, onDelete }) => {
 
 const Accounts = () => {
   const { accounts, loading, addAccount, updateAccount, deleteAccount, transfer, totalBalance } = useAccounts();
+  const { transactions } = useTransactions();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editAccount, setEditAccount] = useState(null);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [viewAccount, setViewAccount] = useState(null);
 
   if (loading) {
     return (
@@ -332,6 +427,7 @@ const Accounts = () => {
               account={account}
               onEdit={setEditAccount}
               onDelete={deleteAccount}
+              onView={setViewAccount}
             />
           ))}
         </div>
@@ -373,6 +469,15 @@ const Accounts = () => {
             setTransferOpen(false);
           }}
           onClose={() => setTransferOpen(false)}
+        />
+      )}
+
+      {/* Account transactions panel */}
+      {viewAccount && (
+        <AccountTransactionsPanel
+          account={viewAccount}
+          transactions={transactions}
+          onClose={() => setViewAccount(null)}
         />
       )}
     </div>

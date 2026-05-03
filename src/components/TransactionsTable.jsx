@@ -122,7 +122,7 @@ const TransactionsTable = ({
           />
           <MdDelete
             className="text-red-600 cursor-pointer hover:text-red-700 hover:scale-125 transition-all"
-            onClick={() => handleDelete(record.id, record.name)}
+            onClick={() => handleDelete(record)}
           />
         </div>
       ),

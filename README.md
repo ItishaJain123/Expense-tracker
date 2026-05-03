@@ -45,7 +45,7 @@ A full-stack personal finance web application built with React 19 and Firebase. 
 | Styling | Tailwind CSS v4 |
 | UI Components | Ant Design v5, Recharts, Lucide React |
 | Backend / DB | Firebase Firestore (NoSQL), Firebase Auth |
-| AI / ML | Google Gemini 1.5 Flash API (Receipt OCR), Web Speech API (Voice) |
+| AI / ML | gemini-3.1-flash-lite-preview (Receipt OCR), Web Speech API (Voice) |
 | Export | XLSX (Excel export) |
 | Date Handling | Day.js, Moment.js |
 

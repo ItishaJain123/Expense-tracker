@@ -89,8 +89,9 @@ const AddExpense = ({ isExpenseModalVisible, handleExpenseCancel, onFinish, acco
     const file = e.target.files[0];
     if (!file) return;
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      toast.error("Add VITE_GEMINI_API_KEY=your_key to your .env file to use Receipt OCR");
+    const model = import.meta.env.VITE_GEMINI_MODEL;
+    if (!apiKey || !model) {
+      toast.error("Add VITE_GEMINI_API_KEY and VITE_GEMINI_MODEL to your .env file to use Receipt OCR");
       return;
     }
     setOcrLoading(true);
@@ -99,7 +100,7 @@ const AddExpense = ({ isExpenseModalVisible, handleExpenseCancel, onFinish, acco
       const base64 = ev.target.result.split(",")[1];
       try {
         const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

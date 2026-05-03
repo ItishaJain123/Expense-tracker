@@ -1,13 +1,10 @@
-const NoTransaction = () => {
+﻿const NoTransaction = () => {
   return (
-    <div className="flex flex-col items-center justify-center w-full mb-8">
-      <img
-        src="/transaction.jpeg"
-        alt="No Transactions"
-        className="w-[300px] md:w-[400px] my-8 rounded-lg shadow-md hover:scale-105 transition-transform duration-300"
-      />
-      <p className="text-lg md:text-xl text-white text-center px-4">
-        You have no transactions currently.
+    <div className="flex flex-col items-center justify-center w-full py-20 px-4">
+      <div className="text-8xl mb-6 animate-bounce">💸</div>
+      <h3 className="text-2xl font-bold text-gray-900 mb-2">No Transactions Yet</h3>
+      <p className="text-gray-600 text-center max-w-sm">
+        Start tracking your finances by adding your first income or expense.
       </p>
     </div>
   );

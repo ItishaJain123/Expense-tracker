@@ -1,5 +1,4 @@
-import { Card, Row, Col } from "antd";
-import Button from "./Button";
+﻿import Button from "./Button";
 
 const Cards = ({
   currentBalance,
@@ -9,71 +8,58 @@ const Cards = ({
   showIncomeModal,
   showResetModal,
 }) => {
+  const cards = [
+    {
+      title: "Current Balance",
+      icon: "💼",
+      value: currentBalance,
+      gradient: "from-blue-600/20 to-sky-400/20",
+      border: "border-blue-600/30",
+      valueColor: currentBalance >= 0 ? "text-blue-700" : "text-red-600",
+      action: { text: "Reset Balance", fn: showResetModal, blue: false },
+    },
+    {
+      title: "Total Income",
+      icon: "📈",
+      value: income,
+      gradient: "from-emerald-500/20 to-teal-500/20",
+      border: "border-emerald-500/30",
+      valueColor: "text-emerald-700",
+      action: { text: "Add Income", fn: showIncomeModal, blue: true },
+    },
+    {
+      title: "Total Expense",
+      icon: "📉",
+      value: expense,
+      gradient: "from-red-500/20 to-rose-500/20",
+      border: "border-red-500/30",
+      valueColor: "text-red-700",
+      action: { text: "Add Expense", fn: showExpenseModal, blue: false },
+    },
+  ];
+
   return (
-    <div>
-      <Row gutter={[24, 24]} justify="center">
-        <Col xs={24} sm={12} lg={8}>
-          <Card
-            bordered={false}
-            className="rounded-xl bg-[#1e3a8a] text-white shadow-lg border border-blue-400 hover:shadow-2xl transition-all duration-300"
-          >
-            <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-              💼 Current Balance
-            </h2>
-            <p className="text-4xl font-bold">Rs {currentBalance}</p>
-            <div className="mt-6">
-              <Button
-                text="Reset Balance"
-                onClick={showResetModal}
-                fullWidth
-                blue
-              />
-            </div>
-          </Card>
-        </Col>
-
-        {/* Total Income */}
-        <Col xs={24} sm={12} lg={8}>
-          <Card
-            bordered={false}
-            className="rounded-xl bg-[#065f46] text-white shadow-lg border border-emerald-400 hover:shadow-2xl transition-all duration-300"
-          >
-            <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-              🪙 Total Income
-            </h2>
-            <p className="text-4xl font-bold">Rs {income}</p>
-            <div className="mt-6">
-              <Button
-                text="Add Income"
-                onClick={showIncomeModal}
-                fullWidth
-                blue
-              />
-            </div>
-          </Card>
-        </Col>
-
-        {/* Total Expense */}
-        <Col xs={24} sm={12} lg={8}>
-          <Card
-            bordered={false}
-            className="rounded-xl bg-[#7f1d1d] text-white shadow-lg border border-rose-400 hover:shadow-2xl transition-all duration-300"
-          >
-            <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-              📉 Total Expense
-            </h2>
-            <p className="text-4xl font-bold">Rs {expense}</p>
-            <div className="mt-6">
-              <Button
-                text="Add Expense"
-                onClick={showExpenseModal}
-                fullWidth
-                blue
-              />
-            </div>
-          </Card>
-        </Col>
-      </Row>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      {cards.map(({ title, icon, value, gradient, border, valueColor, action }) => (
+        <div
+          key={title}
+          className={`bg-gradient-to-br ${gradient} border ${border} rounded-2xl p-6 shadow-xl backdrop-blur-sm`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-gray-600 text-sm font-medium">{title}</span>
+            <span className="text-2xl">{icon}</span>
+          </div>
+          <p className={`text-3xl font-bold ${valueColor} mb-6`}>
+            ₹{value.toLocaleString("en-IN")}
+          </p>
+          <Button
+            text={action.text}
+            onClick={action.fn}
+            fullWidth
+            blue={action.blue}
+          />
+        </div>
+      ))}
     </div>
   );
 };

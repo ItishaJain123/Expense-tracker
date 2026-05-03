@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useEffect } from "react";
@@ -10,39 +10,51 @@ const Header = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
+    if (user) navigate("/dashboard");
   }, [user, loading]);
 
-  const logoutFnc = () => {
-    try {
-      signOut(auth)
-        .then(() => {
-          navigate("/");
-          toast.success("Logout Successfully!");
-        })
-        .catch((error) => {
-          toast.error(error.message);
-        });
-    } catch (error) {
-      toast.error(error.message);
-    }
+  const logout = () => {
+    signOut(auth)
+      .then(() => {
+        navigate("/");
+        toast.success("Logged out successfully!");
+      })
+      .catch((err) => toast.error(err.message));
   };
 
+  const avatarLetter =
+    user?.displayName?.[0]?.toUpperCase() ||
+    user?.email?.[0]?.toUpperCase() ||
+    "U";
+
   return (
-    <header className="sticky top-0 z-50 bg-[#9097ac] text-white px-6 py-2 shadow-md flex justify-between items-center">
+    <header className="sticky top-0 z-50 bg-[#F8FAFC]/90 backdrop-blur-md border-b border-gray-200 px-6 py-3 flex justify-between items-center">
       <div className="flex items-center gap-3">
-        <span className="text-2xl">🚀</span>
-        <h1 className="text-xl font-bold tracking-wide">Expense Tracker</h1>
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center text-lg shadow-lg shadow-blue-600/30">
+          💰
+        </div>
+        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-sky-400 bg-clip-text text-transparent">
+          ExpenseTracker
+        </h1>
       </div>
+
       {user && (
-        <button
-          onClick={logoutFnc}
-          className="cursor-pointer bg-white text-teal-600 font-semibold px-4 py-2 rounded-md hover:bg-teal-100 transition duration-200 shadow-sm"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-sky-400 flex items-center justify-center text-gray-900 text-sm font-bold shadow">
+              {avatarLetter}
+            </div>
+            <span className="text-sm text-gray-300 hidden sm:block">
+              {user.displayName || user.email?.split("@")[0]}
+            </span>
+          </div>
+          <button
+            onClick={logout}
+            className="text-sm text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-red-500/50 px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-red-500/10 cursor-pointer"
+          >
+            Logout
+          </button>
+        </div>
       )}
     </header>
   );

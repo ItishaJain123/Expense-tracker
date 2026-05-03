@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(Get-Content \"C:\\\\Users\\\\GENIUS\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-GENIUS-OneDrive-Desktop-react-Expense-tracker\\\\12bfca7f-f9a7-4071-92da-f9abc5380e17\\\\tasks\\\\bbcrxzk9e.output\" -Wait -Tail 40)",
+      "Bash(Get-Content \"C:\\\\Users\\\\GENIUS\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-GENIUS-OneDrive-Desktop-react-Expense-tracker\\\\12bfca7f-f9a7-4071-92da-f9abc5380e17\\\\tasks\\\\bhqomacvg.output\" -Wait)",
+      "Bash(Select-String -Pattern \"built in|error|Error|warning\" --line-buffered)",
+      "Bash(npx vite *)"
+    ]
+  }
+}

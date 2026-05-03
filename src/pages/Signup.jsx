@@ -1,65 +1,44 @@
-// import Header from "../components/Header";
-// import SignupSignin from "../components/SignupSignin";
-
-// const Signup = () => {
-//   return (
-//     <div className="min-h-screen">
-//       <Header />
-//       <main className="flex justify-center items-center">
-//         <SignupSignin />
-//       </main>
-//     </div>
-//   );
-// };
-
-// export default Signup;
-
-import Header from "../components/Header";
+﻿import { useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "../firebase";
 import SignupSignin from "../components/SignupSignin";
 
 const Signup = () => {
+  const [user, loading] = useAuthState(auth);
+  const navigate = useNavigate();
+
+  // Redirect already-logged-in users away from login page
+  useEffect(() => {
+    if (!loading && user) navigate("/app/dashboard");
+  }, [user, loading]);
+
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Background Video */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover z-[-1]"
-      >
-        <source src="/Expense-tracker.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Ambient blobs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-700/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-sky-500/15 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Dark overlay on video (optional) */}
-      <div className="absolute inset-0 bg-black/40 z-0" />
-
-      {/* Header */}
-      <Header />
-
-      {/* Main section */}
-      <main className="relative z-10 flex items-center justify-center min-h-[calc(100vh-64px)] px-4">
-        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-8 bg-white/40 dark:bg-black/60 backdrop-blur-md rounded-xl p-10 shadow-lg">
-          {/* Left Side: Expense Tracker Info */}
-          <div className="flex flex-col justify-center text-left text-gray-800 dark:text-gray-100">
-            <h2 className="text-3xl font-bold mb-4">Track Every Rupee 💰</h2>
-            <p className="text-lg mb-2">
-              Our Expense Tracker helps you stay on top of your finances with
-              real-time tracking of income, expenses, and balances.
-            </p>
-            <p className="text-sm text-gray-800 dark:text-gray-200">
-              Visual insights. Simple UI. Full control. Sign up and start saving
-              smarter!
-            </p>
+      <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-md">
+        {/* Logo */}
+        <Link to="/" className="flex flex-col items-center gap-2">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-sky-500 flex items-center justify-center text-3xl shadow-xl shadow-blue-600/30">
+            💰
           </div>
+          <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-sky-400 bg-clip-text text-transparent">
+            ExpenseTracker
+          </span>
+        </Link>
 
-          {/* Right Side: Signup Form */}
-          <div className="flex justify-center items-center">
-            <SignupSignin />
-          </div>
-        </div>
-      </main>
+        <SignupSignin />
+
+        <Link
+          to="/"
+          className="text-gray-500 text-sm hover:text-gray-300 transition-colors"
+        >
+          ← Back to home
+        </Link>
+      </div>
     </div>
   );
 };
